@@ -1,0 +1,126 @@
+<html>
+  <head>
+    <title>pano.tw 360 viewer</title>
+    <script src="https://www.marzipano.net/build/marzipano.js"></script>
+    <script src="https://unpkg.com/axios@0.19.2/dist/axios.min.js"></script>
+    <script src="https://rawcdn.githack.com/google/marzipano/master/demos/video/VideoAsset.js"></script>
+    <style>
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-user-drag: none;
+        -webkit-touch-callout: none;
+        -ms-content-zooming: none;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #app {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>讀取中...</h1>
+    </div>
+    <script>
+      const imgurId = location.pathname;
+
+      axios
+        .get(`https://api.pano.tw/${imgurId}`.replace(/\/+/, '/'))
+        .then((response) => {
+          const type = response.data.type;
+
+          if (/^video/.test(type)) {
+            const viewer = new Marzipano.Viewer(document.getElementById('app'));
+
+            const asset = new VideoAsset();
+            const source = new Marzipano.SingleAssetSource(asset);
+
+            const limiter = Marzipano.RectilinearView.limit.vfov(90 * Math.PI / 180, 90 * Math.PI / 180);
+            const view = new Marzipano.RectilinearView({ fov: Math.PI / 2 }, limiter);
+
+            const scene = viewer.createScene({
+              source,
+              geometry,
+              view,
+            });
+
+            scene.switchTo();
+            const waitForReadyState = (element, readyState, interval, done) => {
+              const timer = setInterval(function() {
+                if (element.readyState >= readyState) {
+                  clearInterval(timer);
+                  done(null, true);
+                }
+              }, interval);
+            }
+
+            let started = false;
+            const tryStart = () => {
+              if (started) {
+                return;
+              }
+              started = true;
+
+              const video = document.createElement('video');
+              video.src = response.data.video;
+              video.crossOrigin = 'anonymous';
+
+              video.autoplay = true;
+              video.loop = true;
+
+              // Prevent the video from going full screen on iOS.
+              video.playsInline = true;
+              video.webkitPlaysInline = true;
+
+              video.play();
+
+              waitForReadyState(video, video.HAVE_METADATA, 100, () => {
+                waitForReadyState(video, video.HAVE_ENOUGH_DATA, 100, () => {
+                  asset.setVideo(video);
+                });
+              });
+            }
+
+            document.body.addEventListener('click', tryStart);
+            document.body.addEventListener('touchstart', tryStart);
+          } else if (type === 'article') {
+            const viewer = new Marzipano.Viewer(document.getElementById('app'));
+            const src = response.data.image;
+            const source = Marzipano.ImageUrlSource.fromString(src);
+            const geometry = new Marzipano.EquirectGeometry([{ width: 4000 }]);
+            const limiter = Marzipano.RectilinearView.limit.traditional(1024, 100 * Math.PI/180);
+            const view = new Marzipano.RectilinearView({ yaw: Math.PI }, limiter);
+
+            // Create scene.
+            const scene = viewer.createScene({
+              source,
+              geometry,
+              view,
+              pinFirstLevel: true
+            });
+
+            // Display scene.
+            scene.switchTo();
+          }
+        });
+    </script>
+  </body>
+</html>
