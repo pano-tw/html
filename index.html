@@ -41,7 +41,7 @@
       <h1>讀取中...</h1>
     </div>
     <script>
-      const imgurId = location.pathname;
+      const imgurId = location.pathname.replace(/\/.+\/, ''/);
 
       axios
         .get(`https://api.pano.tw/${imgurId}`)
