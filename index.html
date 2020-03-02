@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>pano.tw 360 viewer</title>
+    <meta charset="UTF-8" />
     <script src="https://www.marzipano.net/build/marzipano.js"></script>
     <script src="https://unpkg.com/axios@0.19.2/dist/axios.min.js"></script>
     <script src="https://rawcdn.githack.com/google/marzipano/master/demos/video/VideoAsset.js"></script>
@@ -120,6 +121,9 @@
             // Display scene.
             scene.switchTo();
           }
+        })
+        .catch(() => {
+          document.querySelector('#app>h1').innerHTML = '讀取失敗';
         });
     </script>
   </body>
