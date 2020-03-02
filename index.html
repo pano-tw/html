@@ -44,7 +44,7 @@
       const imgurId = location.pathname;
 
       axios
-        .get(`https://api.pano.tw/${imgurId}`.replace(/\/+/, '/'))
+        .get(`https://api.pano.tw/${imgurId}`)
         .then((response) => {
           const type = response.data.type;
 
