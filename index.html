@@ -44,8 +44,10 @@
       const imgurId = location.pathname.replace(/\/.+\//, '');
 
       axios
-        .get(`https://api.pano.tw/${imgurId}`)
+        .get(`https://api.pano.tw/${imgurId}`, { crossdomain: true })
         .then((response) => {
+          document.querySelector('#app').innerHTML = '';
+
           const type = response.data.type;
 
           if (/^video/.test(type)) {
